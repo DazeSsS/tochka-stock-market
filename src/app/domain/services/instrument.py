@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.data.repositories import InstrumentRepository
@@ -16,10 +17,12 @@ class InstrumentService:
         self.instrument_repo = instrument_repo
 
     async def create_instrument(self, instrument: InstrumentCreate) -> InstrumentResponse:
+        existing_instrument = await self.instrument_repo.get_instrument_by_ticker(instrument.ticker)
+        if existing_instrument is not None:
+            raise HTTPException(status_code=400, detail='Instrument already exists')
+
         instrument_dict = instrument.model_dump()
         instrument_obj = Instrument(**instrument_dict)
-
-        # TODO handle ticker collision
 
         await self.instrument_repo.add(obj=instrument_obj)
         response = InstrumentResponse.model_validate(instrument_obj)

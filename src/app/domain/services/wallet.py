@@ -1,4 +1,5 @@
 import uuid
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.data.repositories import (
@@ -88,6 +89,6 @@ class WalletService:
                 amount=withdraw.amount * -1
             )
         else:
-            pass # TODO handle error
+            raise HTTPException(status_code=400, detail='Insufficient funds')
         
         await self.session.commit()

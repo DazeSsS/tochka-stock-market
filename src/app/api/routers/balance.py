@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 
-@router.get('') # TODO add example value
+@router.get('')
 async def get_balances(
     current_user: Annotated[UserResponse, Depends(get_current_user)],
     wallet_service: Annotated[WalletService, Depends(get_wallet_service)],
