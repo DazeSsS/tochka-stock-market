@@ -245,6 +245,7 @@ class OrderService:
                 break
 
             for match_id, match_price in matches:
+                match_price = min(match_price, price)
                 if remaining_qty <= 0:
                     break
             

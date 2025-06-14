@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.data.repositories.base import SQLAlchemyRepository
@@ -36,7 +36,10 @@ class OrderRepository(SQLAlchemyRepository[Order]):
     async def get_user_orders(self, user_id: uuid.UUID) -> list[Order]:
         query = (
             select(Order)
-            .where(Order.user_id == user_id)
+            .where(
+                Order.user_id == user_id,
+                or_(Order.status == OrderStatus.NEW, Order.status == OrderStatus.PARTIALLY_EXECUTED)
+            )
             .order_by(Order.timestamp.desc())
         )
         result = await self.session.scalars(query)
