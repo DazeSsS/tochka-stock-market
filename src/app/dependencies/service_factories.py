@@ -51,9 +51,11 @@ def get_transaction_service(session: Annotated[AsyncSession, Depends(get_async_s
     return TransactionService(session, instrument_repo, transaction_repo)
 
 def get_user_service(session: Annotated[AsyncSession, Depends(get_async_session)]) -> UserService:
+    balance_repo = BalanceRepository(session)
+    instrument_repo = InstrumentRepository(session)
     user_repo = UserRepository(session)
     wallet_repo = WalletRepository(session)
-    return UserService(session, user_repo, wallet_repo)
+    return UserService(session, balance_repo, instrument_repo, user_repo, wallet_repo)
 
 def get_wallet_service(session: Annotated[AsyncSession, Depends(get_async_session)]) -> WalletService:
     balance_repo = BalanceRepository(session)

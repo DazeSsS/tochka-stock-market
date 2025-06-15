@@ -2,8 +2,8 @@ import uuid
 from utils import generate_api_key
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.data.repositories import UserRepository, WalletRepository
-from app.data.models import User, Wallet
+from app.data.repositories import BalanceRepository, InstrumentRepository, UserRepository, WalletRepository
+from app.data.models import Balance, Instrument, User, Wallet
 from app.domain.entities import UserCreate, UserResponse
 from app.domain.enums import UserRole
 from app.api.exceptions.exceptions import NotFoundException
@@ -13,10 +13,14 @@ class UserService:
     def __init__(
         self,
         session: AsyncSession,
+        balance_repo: BalanceRepository,
+        instrument_repo: InstrumentRepository,
         user_repo: UserRepository,
         wallet_repo: WalletRepository,
     ):
         self.session = session
+        self.balance_repo = balance_repo
+        self.instrument_repo = instrument_repo
         self.user_repo = user_repo
         self.wallet_repo = wallet_repo
 
@@ -29,7 +33,20 @@ class UserService:
 
         async with self.session.begin():
             await self.user_repo.add(obj=user_obj)
-            await self.wallet_repo.add(obj=Wallet(user_id=user_obj.id))
+
+            user_wallet = Wallet(user_id=user_obj.id)
+            await self.wallet_repo.add(obj=user_wallet)
+            
+            rub_instrument = await self.instrument_repo.get_instrument_by_ticker(ticker='RUB')
+            if not rub_instrument:
+                rub_instrument = Instrument(name='Ruble', ticker='RUB')
+                await self.instrument_repo.add(rub_instrument)
+
+            user_rub_balance = Balance(
+                wallet_id=user_wallet.id,
+                instrument_id=rub_instrument.id
+            )
+            await self.balance_repo.add(user_rub_balance)
 
             return UserResponse.model_validate(user_obj)
 
