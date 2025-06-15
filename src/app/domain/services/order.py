@@ -131,8 +131,17 @@ class OrderService:
             if isinstance(order, LimitOrderCreate):
                 if order.direction == OrderDirection.BUY:
                     required_amount = order.qty * order.price
+
+                    balance = await self.balance_repo.get_user_balance_of_instrument(wallet.id, rub_instrument.id)
+                    if not balance or balance.amount < required_amount:
+                        raise HTTPException(status_code=400, detail="Insufficient RUB quantity")
+
                     await self._reserve_funds(wallet.id, rub_instrument.id, required_amount)
                 else:
+                    balance = await self.balance_repo.get_user_balance_of_instrument(wallet.id, instrument.id)
+                    if not balance or balance.amount < required_amount:
+                        raise HTTPException(status_code=400, detail="Insufficient instrument quantity")
+
                     await self._reserve_funds(wallet.id, instrument.id, order.qty)
             else:
                 if order.direction == OrderDirection.BUY:
@@ -142,7 +151,7 @@ class OrderService:
 
                     balance = await self.balance_repo.get_user_balance_of_instrument(wallet.id, rub_instrument.id)
                     if not balance or balance.amount < total_cost:
-                        raise HTTPException(status_code=400, detail="Insufficient instrument quantity")
+                        raise HTTPException(status_code=400, detail="Insufficient RUB quantity")
                 else:
                     balance = await self.balance_repo.get_user_balance_of_instrument(wallet.id, instrument.id)
                     if not balance or balance.amount < order.qty:
