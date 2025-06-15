@@ -381,6 +381,9 @@ class OrderService:
             order = await self.order_repo.get_by_id(order_id)
             if not order:
                 raise HTTPException(status_code=404, detail="Order not found")
+
+            if order.order_type == OrderType.MARKET:
+                raise HTTPException(status_code=400, detail="Can't cancel market order")
             
             if order.user_id != user_id:
                 raise HTTPException(status_code=403, detail="Can't cancel other user's order")

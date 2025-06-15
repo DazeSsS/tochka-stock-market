@@ -184,3 +184,6 @@ class OrderBookRepository:
         pipe.delete(f'order:{order_id}')
         
         await pipe.execute()
+
+    async def flush_db(self):
+        await self.redis.flushdb()
