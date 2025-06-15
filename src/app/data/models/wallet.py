@@ -14,5 +14,5 @@ class Wallet(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), unique=True, nullable=False)
 
     user: Mapped['User'] = relationship(back_populates='wallet')
-    balances: Mapped[list['Balance']] = relationship(back_populates='wallet')
+    balances: Mapped[list['Balance']] = relationship(back_populates='wallet', cascade='all, delete-orphan')
     transactions: Mapped[list['Transaction']] = relationship(back_populates='wallet', cascade='all, delete-orphan')
