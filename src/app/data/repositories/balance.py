@@ -1,3 +1,5 @@
+from fastapi import HTTPException
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,10 +36,10 @@ class BalanceRepository(SQLAlchemyRepository[Balance]):
         """Резервируем средства на балансе"""
         balance = await self.get_user_balance_of_instrument(wallet_id, instrument_id)
         if not balance:
-            raise ValueError("Balance not found")
+            raise HTTPException(status_code=400, detail="Balance not found")
         
         if balance.amount < amount:
-            raise ValueError("Insufficient funds")
+            raise HTTPException(status_code=400, detail="Insufficient funds")
         
         balance.reserved += amount
         await self.session.flush()
@@ -46,10 +48,10 @@ class BalanceRepository(SQLAlchemyRepository[Balance]):
         """Освобождаем зарезервированные средства"""
         balance = await self.get_user_balance_of_instrument(wallet_id, instrument_id)
         if not balance:
-            raise ValueError("Balance not found")
+            raise HTTPException(status_code=400, detail="Balance not found")
         
         if balance.reserved < amount:
-            raise ValueError("Insufficient reserved funds")
+            raise HTTPException(status_code=400, detail="Insufficient reserved funds")
         
         balance.reserved -= amount
         await self.session.flush()
@@ -65,7 +67,7 @@ class BalanceRepository(SQLAlchemyRepository[Balance]):
         to_balance = await self.get_user_balance_of_instrument(to_wallet_id, instrument_id)
         
         if not from_balance:
-            raise ValueError("Sender balance not found")
+            raise HTTPException(status_code=400, detail="Sender balance not found")
             
         if not to_balance:
             to_balance = Balance(
@@ -80,7 +82,7 @@ class BalanceRepository(SQLAlchemyRepository[Balance]):
         # Проверяем доступный баланс (общий - зарезервированный)
         available = from_balance.amount - from_balance.reserved
         if available < amount:
-            raise ValueError("Insufficient available funds")
+            raise HTTPException(status_code=400, detail="Insufficient available funds")
         
         from_balance.amount -= amount
         to_balance.amount += amount
