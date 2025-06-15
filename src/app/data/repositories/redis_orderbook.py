@@ -164,7 +164,7 @@ class OrderBookRepository:
         fill_qty: int
     ):
         await self.redis.hincrbyfloat(
-            f'order:{order_id}', 'filled', fill_qty
+            f'order:{order_id}', 'qty', -fill_qty
         )
 
     async def remove_order(
